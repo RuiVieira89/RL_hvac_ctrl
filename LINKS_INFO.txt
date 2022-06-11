@@ -1,1 +1,9 @@
 https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html#dqn-algorithm
+
+repos:
+https://github.com/sweetice/Deep-reinforcement-learning-with-pytorch
+https://github.com/INFERLab/Gnu-RL
+https://github.com/DeanRoddey/CQC
+https://github.com/faisalthaheem/machine-learnt-air-conditioning
+https://github.com/qatshana/Cool.AI
+https://github.com/arowdy98/RL-for-HVAC-control
