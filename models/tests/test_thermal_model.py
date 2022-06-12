@@ -1,5 +1,7 @@
-# from models import *
 
+import sys
+sys.path.append('/home/rui/dev/RL_hvac_ctrl/models/')
+sys.path.append('/home/rui/dev/RL_hvac_ctrl/models/Thermal_model.py')
 from models.thermal_model import Thermal_model
 
 import matplotlib.pyplot as plt
