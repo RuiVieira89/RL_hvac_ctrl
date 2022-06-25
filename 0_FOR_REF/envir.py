@@ -24,7 +24,7 @@ class HvacEnv(Environment):
         Defines the states of the environment.
 
         Returns:
-            dictionary with 
+            dictionary with
         """
 
         return dict(type="float", shape=(self.STATES_SIZE,))
@@ -35,8 +35,10 @@ class HvacEnv(Environment):
         """
 
         return {
-            "new_mass": dict(type="float", shape=(self.NUM_NEW_MASS,), min_value=18.0/(60*60), max_value=200.0/(60*60)),
-            "ac_balance": dict(type="float", shape=(self.NUM_AC_BALANCE,), min_value=-10.0, max_value=10.0),
+            "new_mass": dict(type="float", shape=(self.NUM_NEW_MASS,),
+                             min_value=18.0/(60*60), max_value=200.0/(60*60)),
+            "ac_balance": dict(type="float", shape=(self.NUM_AC_BALANCE,),
+                               min_value=-10.0, max_value=10.0),
         }
 
     # Optional, should only be defined if environment has a natural maximum
@@ -53,18 +55,19 @@ class HvacEnv(Environment):
         self.Thermal_model = Thermal_model()
         return state
 
-
     def execute(self, actions):
         """
         """
-        
+
         reward = 0
         nb_timesteps = 1
 
         for i in range(1, nb_timesteps + 1):
-            next_state = [self.Thermal_model.thermal_balance_update(nb_timesteps, actions['new_mass'][0], actions['ac_balance'][0])]
+            next_state = [self.Thermal_model.thermal_balance_update(
+                nb_timesteps, actions['new_mass'][0],
+                actions['ac_balance'][0])]
             reward += self.reward()
-        
+
             if self.terminal():
                 reward = reward / i
                 break
@@ -74,21 +77,22 @@ class HvacEnv(Environment):
 
         return next_state, self.terminal(), reward
 
-
     def terminal(self):
         """
-        Defines in which conditions an episode will be finished. 
+        Defines in which conditions an episode will be finished.
         """
 
-        self.finished = self.Thermal_model.dew_point == 17 #NOT SURE IF IT'S NECESSARY!!! => DEFINE WHEN COMES TO AN END
-        self.episode_end = (self.Thermal_model.Time_Step > self.max_step_per_episode) or (self.Thermal_model.temperature_inside > 30
-        )  
-        return self.finished or self.episode_end
+        self.finished = self.Thermal_model.dew_point == 17
+        # NOT SURE IF IT'S NECESSARY!!! => DEFINE WHEN COMES TO AN END
+        self.episode_end = (
+            self.Thermal_model.Time_Step > self.max_step_per_episode
+            ) or (self.Thermal_model.temperature_inside > 30)
 
+        return self.finished or self.episode_end
 
     def reward(self):
         """
-        Defines which rewards it's possible to receive in the environment. 
+        Defines which rewards it's possible to receive in the environment.
 
         1 if confort == 2
         -1 if confort == 1
@@ -100,5 +104,5 @@ class HvacEnv(Environment):
         else:
             confort = self.Thermal_model.dew_point_confort()
             reward = 1 if (confort == 2) else -1 if (confort == 1) else -100
-  
+
         return reward

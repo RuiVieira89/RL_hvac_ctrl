@@ -9,39 +9,48 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from tensorforce import Agent
+# from thermal_model import Thermal_model
+# from envir import HvacEnv
 
-from thermal_model import Thermal_model
-from envir import HvacEnv
 
-def update_dict(rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep, name, results_dict):
+def update_dict(rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep,
+                thermalBalance_avg_ep, name, results_dict):
     """
     Updates a dictionary with the avergaes values of each episode.
     """
 
-    results_dict[name]['rewards_avg_ep'] =np.append(results_dict[name]['rewards_avg_ep'], rewards_avg_ep)
-    results_dict[name]['newMass_avg_ep'] =np.append(results_dict[name]['newMass_avg_ep'], newMass_avg_ep)
-    results_dict[name]['acBalance_avg_ep'] =np.append(results_dict[name]['acBalance_avg_ep'], acBalance_avg_ep)
-    results_dict[name]['thermalBalance_avg_ep'] =np.append(results_dict[name]['thermalBalance_avg_ep'], thermalBalance_avg_ep)
+    results_dict[name]['rewards_avg_ep'] = np.append(
+        results_dict[name]['rewards_avg_ep'], rewards_avg_ep)
+    results_dict[name]['newMass_avg_ep'] = np.append(
+        results_dict[name]['newMass_avg_ep'], newMass_avg_ep)
+    results_dict[name]['acBalance_avg_ep'] = np.append(
+        results_dict[name]['acBalance_avg_ep'], acBalance_avg_ep)
+    results_dict[name]['thermalBalance_avg_ep'] = np.append(
+        results_dict[name]['thermalBalance_avg_ep'], thermalBalance_avg_ep)
 
     return results_dict
 
 
-def run(environment, agent, n_episodes, max_step_per_episode, combination, test=False):
+def run(environment, agent, n_episodes, max_step_per_episode,
+        combination, test=False):
     """
     Train agent for n_episodes
 
-    There are two modes, training mode (where exploration is allowed), used for training 
-    the agent over a large number of episodes; 
-    and test mode (where exploration is not allowed) used to evaluate the agent’s performance.
+    There are two modes, training mode (where exploration is allowed),
+    used for training the agent over a large number of episodes;
+    and test mode (where exploration is not allowed) used to evaluate the
+    agent's performance.
     """
-    
-    rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep = (np.array([]) for i in range(4))
 
-    #environment.FlightModel.max_step_per_episode = max_step_per_episode
+    rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep = (
+        np.array([]) for i in range(4))
+
+    # environment.FlightModel.max_step_per_episode = max_step_per_episode
     # Loop over episodes
     for i in range(n_episodes):
         # Initialize episode
-        episode_length, rewards_ep, new_mass, ac_balance, thermalBalance = (0 for i in range(5))
+        episode_length, rewards_ep, new_mass, ac_balance, thermalBalance = (
+            0 for i in range(5))
         states = environment.reset()
         internals = agent.initial_internals()
         terminal = False
@@ -55,7 +64,7 @@ def run(environment, agent, n_episodes, max_step_per_episode, combination, test=
                 states, terminal, reward = environment.execute(actions=actions)
                 if episode_length > max_step_per_episode:
                     terminal = True
-                
+
                 # increment values
                 rewards_ep += reward
                 new_mass += actions['new_mass'][0]
@@ -67,7 +76,7 @@ def run(environment, agent, n_episodes, max_step_per_episode, combination, test=
                 actions = agent.act(states=states)
                 states, terminal, reward = environment.execute(actions=actions)
                 agent.observe(terminal=terminal, reward=reward)
-                
+
                 rewards_ep += reward
 
                 if episode_length > max_step_per_episode:
@@ -78,13 +87,15 @@ def run(environment, agent, n_episodes, max_step_per_episode, combination, test=
                 new_mass += actions['new_mass'][0]
                 ac_balance += actions['ac_balance'][0]
                 thermalBalance += states[0]
-        
+
         # increment arrays
         rewards_avg_ep = np.append(rewards_avg_ep, rewards_ep / episode_length)
         newMass_avg_ep = np.append(newMass_avg_ep, new_mass / episode_length)
-        acBalance_avg_ep = np.append(acBalance_avg_ep, ac_balance / episode_length)
-        thermalBalance_avg_ep = np.append(thermalBalance_avg_ep, thermalBalance / episode_length)
-        
+        acBalance_avg_ep = np.append(
+            acBalance_avg_ep, ac_balance / episode_length)
+        thermalBalance_avg_ep = np.append(
+            thermalBalance_avg_ep, thermalBalance / episode_length)
+
     return rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep
 
 
@@ -112,13 +123,16 @@ def runner(
         }       
     }
 
-    for i in range(round(n_episodes / 100)): #Divide the number of episodes into batches of 100 episodes
+    for i in range(round(n_episodes / 100)):
+        # Divide the number of episodes into batches of 100 episodes
         print("=====================================================")
         print(f" Batch #: {i} / {round(n_episodes / 100)}")
         print("=====================================================")
         # Train Agent for 100 episode
-        rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep = run(environment, agent, 100, max_step_per_episode, combination=combination)
-        results = update_dict(rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep,'train', results) 
+        rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep = run(
+            environment, agent, 100, max_step_per_episode, combination=combination)
+        results = update_dict(rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, 
+                              thermalBalance_avg_ep, 'train', results)
 
         # Test Agent for this batch
         rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep = run(
@@ -129,7 +143,8 @@ def runner(
             combination=combination,
             test=True
         )
-        results = update_dict(rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep, thermalBalance_avg_ep,'test', results)
+        results = update_dict(rewards_avg_ep, newMass_avg_ep, acBalance_avg_ep,
+                              thermalBalance_avg_ep, 'test', results)
 
     # Plot the evolution of the agent over the batches
     sets_ = ['train', 'test']
@@ -143,9 +158,10 @@ def runner(
             ax.set_title(f'{set_} - Avg {name} per episode')
             plt.savefig(f"results/Graphs/{set_}-Avg_{name}_per_episode")
 
-    #Terminate the agent and the environment
+    # Terminate the agent and the environment
     agent.close()
     environment.close()
+
 
 # Instantiate a Tensorforce agent
 def create_agent(environment):
@@ -154,24 +170,26 @@ def create_agent(environment):
         # Automatically configured network
         network='auto',
         # Optimization
-        batch_size=10, update_frequency=2, learning_rate=1e-3, subsampling_fraction=0.2,
+        batch_size=10, update_frequency=2, learning_rate=1e-3,
+        subsampling_fraction=0.2,
         optimization_steps=5,
         # Reward estimation
         likelihood_ratio_clipping=0.2, discount=0.99, estimate_terminal=False,
         # Critic
         critic_network='auto',
-        critic_optimizer=dict(optimizer='adam', multi_step=10, learning_rate=1e-3),
+        critic_optimizer=dict(
+            optimizer='adam', multi_step=10, learning_rate=1e-3),
         # Preprocessing
         preprocessing=None,
         # Exploration
         exploration=0.0, variable_noise=0.0,
         # Regularization
-        l2_regularization=0.0, entropy_regularization=0.0,
+        l2_regularization=0.0,
+        entropy_regularization=0.0,
         # TensorFlow etc
-        name='agent', device=None, parallel_interactions=1, seed=None, execution=None, saver=None,
-        summarizer=None, recorder=None
-)
-
+        name='agent', device=None, parallel_interactions=1, seed=None,
+        execution=None, saver=None,
+        summarizer=None, recorder=None)
 
 # Instantiate our Thermal Model
 # ThermalModel = Thermal_model()
